@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tasks - Earnzy</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --primary-green: #00C853;
+            --secondary-white: #FFFFFF;
+            --accent-black: linear-gradient(180deg, #000000 0%, #1B1B1B 100%);
+            --highlight-green: #7CFC00;
+            --text-dark: #222222;
+            --background-gradient: linear-gradient(180deg, #FFFFFF 0%, #E8F5E9 50%, #00C853 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: var(--background-gradient);
+            color: var(--text-dark);
+            min-height: 100vh;
+            padding-bottom: 80px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 0 16px;
+        }
+
+        /* Header Styles */
+        header {
+            padding: 16px;
+            background: var(--secondary-white);
+            border-radius: 0 0 20px 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin-bottom: 16px;
+        }
+
+        .app-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            font-size: 20px;
+            color: var(--primary-green);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .stats-card {
+            background: var(--accent-black);
+            color: var(--secondary-white);
+            border-radius: 16px;
+            padding: 16px;
+            margin: 16px 0;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-family: 'Poppins', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        /* Section Styles */
+        .section-title {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            font-size: 18px;
+            margin: 24px 0 16px;
+        }
+
+        /* Tasks List */
+        .tasks-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .task-item {
+            background: var(--secondary-white);
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease;
+        }
+
+        .task-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .task-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .task-icon.available {
+            background: rgba(0, 200, 83, 0.1);
+            color: var(--primary-green);
+        }
+
+        .task-icon.completed {
+            background: rgba(158, 158, 158, 0.1);
+            color: #9E9E9E;
+        }
+
+        .task-details {
+            flex: 1;
+        }
+
+        .task-title {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 500;
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+
+        .task-description {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .task-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 12px;
+            color: #888;
+        }
+
+        .task-reward {
+            color: var(--primary-green);
+            font-weight: 500;
+        }
+
+        .task-action {
+            background: var(--primary-green);
+            color: var(--secondary-white);
+            border: none;
+            border-radius: 20px;
+            padding: 10px 20px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .task-action:hover:not(:disabled) {
+            background: #00B34A;
+        }
+
+        .task-action:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* Task Categories */
+        .categories {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+
+        .category {
+            background: var(--secondary-white);
+            border: 1px solid #e0e0e0;
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .category.active {
+            background: var(--primary-green);
+            color: var(--secondary-white);
+            border-color: var(--primary-green);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #888;
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--secondary-white);
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 12px;
+            color: #888;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .nav-item.active {
+            color: var(--primary-green);
+        }
+
+        .nav-icon {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary-green);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1001;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        .toast.error {
+            background: #f44336;
+        }
+
+        /* Loading Spinner */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-green);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Task Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-content {
+            background: var(--secondary-white);
+            width: 100%;
+            max-width: 480px;
+            border-radius: 24px 24px 0 0;
+            padding: 24px;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal.active .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            font-size: 20px;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #888;
+            cursor: pointer;
+        }
+
+        .task-instructions {
+            background: rgba(0, 200, 83, 0.05);
+            border: 1px solid rgba(0, 200, 83, 0.2);
+            border-radius: 12px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+
+        .instructions-title {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .instructions-list {
+            padding-left: 20px;
+        }
+
+        .instructions-list li {
+            margin-bottom: 8px;
+        }
+
+        .submit-proof {
+            background: var(--primary-green);
+            color: var(--secondary-white);
+            border: none;
+            border-radius: 50px;
+            padding: 16px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 16px;
+            transition: all 0.2s ease;
+        }
+
+        .submit-proof:hover {
+            background: #00B34A;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="app-bar">
+                <a href="dashboard.html" class="logo">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Tasks</span>
+                </a>
+                <div class="user-info">
+                    <i class="fas fa-bell"></i>
+                    <img id="userAvatar" class="user-avatar" src="" alt="User">
+                </div>
+            </div>
+            
+            <div class="stats-card">
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="completedToday">0</div>
+                        <div class="stat-label">Completed Today</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="earnedToday">₹0.00</div>
+                        <div class="stat-label">Earned Today</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Task Categories -->
+        <div class="categories">
+            <div class="category active" data-category="all">All Tasks</div>
+            <div class="category" data-category="app_install">App Install</div>
+            <div class="category" data-category="survey">Surveys</div>
+            <div class="category" data-category="video">Videos</div>
+            <div class="category" data-category="social">Social</div>
+            <div class="category" data-category="referral">Referral</div>
+        </div>
+
+        <!-- Tasks List -->
+        <h2 class="section-title">Available Tasks</h2>
+        <div class="tasks-list" id="tasksList">
+            <div class="loading">
+                <div class="loading-spinner"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Task Modal -->
+    <div class="modal" id="taskModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTaskTitle">Task Title</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            
+            <div class="task-reward" style="font-size: 18px; margin-bottom: 16px;">
+                Reward: <span id="modalTaskReward">₹0.00</span>
+            </div>
+            
+            <div class="task-instructions">
+                <div class="instructions-title">Instructions:</div>
+                <ul class="instructions-list" id="modalTaskInstructions">
+                    <!-- Instructions will be populated by JavaScript -->
+                </ul>
+            </div>
+            
+            <button class="submit-proof" id="submitProof">
+                I Have Completed This Task
+            </button>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toast-message"></span>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <a href="dashboard.html" class="nav-item">
+            <i class="fas fa-home nav-icon"></i>
+            <span>Home</span>
+        </a>
+        <a href="tasks.html" class="nav-item active">
+            <i class="fas fa-tasks nav-icon"></i>
+            <span>Tasks</span>
+        </a>
+        <a href="wallet.html" class="nav-item">
+            <i class="fas fa-wallet nav-icon"></i>
+            <span>Wallet</span>
+        </a>
+        <a href="referrals.html" class="nav-item">
+            <i class="fas fa-users nav-icon"></i>
+            <span>Referrals</span>
+        </a>
+        <a href="profile.html" class="nav-item">
+            <i class="fas fa-user nav-icon"></i>
+            <span>Profile</span>
+        </a>
+    </nav>
+
+    <script>
+        // Initialize Supabase
+        const SUPABASE_URL = 'https://yxzztomtgaqmboquoszg.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4enp0b210Z2FxbWJvcXVvc3pnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI0MzU4OTQsImV4cCI6MjA3ODAxMTg5NH0.NKaBpeTUE3zgcyCOl_mbF1NJHGry5I8vBDzkb1RS1DY';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        let currentUser = null;
+        let userData = null;
+        let tasks = [];
+        let userTasks = [];
+        let activeCategory = 'all';
+
+        // Check authentication and load user data
+        async function initApp() {
+            const { data: { session }, error } = await supabase.auth.getSession();
+            
+            if (!session) {
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            currentUser = session.user;
+            
+            // Load user data
+            await loadUserData();
+            
+            // Load tasks and user tasks
+            await loadTasks();
+            
+            // Setup event listeners
+            setupEventListeners();
+            
+            // Update UI
+            updateStatsUI();
+        }
+
+        // Load user data from database
+        async function loadUserData() {
+            const { data, error } = await supabase
+                .from('users')
+                .select('*')
+                .eq('id', currentUser.id)
+                .single();
+                
+            if (error) {
+                console.error('Error loading user data:', error);
+                return;
+            }
+            
+            userData = data;
+            
+            if (userData.avatar_url) {
+                document.getElementById('userAvatar').src = userData.avatar_url;
+            }
+        }
+
+        // Load tasks and user tasks
+        async function loadTasks() {
+            const tasksList = document.getElementById('tasksList');
+            
+            // Get active tasks
+            const { data: tasksData, error } = await supabase
+                .from('tasks')
+                .select('*')
+                .eq('status', 'active');
+                
+            if (error) {
+                console.error('Error loading tasks:', error);
+                tasksList.innerHTML = '<div class="empty-state">Error loading tasks</div>';
+                return;
+            }
+            
+            tasks = tasksData;
+            
+            // Get user's completed tasks for today
+            const today = new Date().toISOString().split('T')[0];
+            const { data: userTasksData, error: userTasksError } = await supabase
+                .from('user_tasks')
+                .select('*')
+                .eq('user_id', currentUser.id)
+                .gte('completed_at', today + 'T00:00:00Z')
+                .lte('completed_at', today + 'T23:59:59Z');
+                
+            userTasks = userTasksData || [];
+            
+            renderTasks();
+            updateStatsUI();
+        }
+
+        // Render tasks based on active category
+        function renderTasks() {
+            const tasksList = document.getElementById('tasksList');
+            
+            if (tasks.length === 0) {
+                tasksList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">
+                            <i class="fas fa-tasks"></i>
+                        </div>
+                        <p>No tasks available at the moment</p>
+                        <p style="font-size: 14px; margin-top: 8px;">Check back later for new tasks!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let filteredTasks = tasks;
+            
+            if (activeCategory !== 'all') {
+                filteredTasks = tasks.filter(task => task.task_type === activeCategory);
+            }
+            
+            if (filteredTasks.length === 0) {
+                tasksList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">
+                            <i class="fas fa-tasks"></i>
+                        </div>
+                        <p>No ${activeCategory} tasks available</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            tasksList.innerHTML = '';
+            
+            filteredTasks.forEach(task => {
+                const userTask = userTasks.find(ut => ut.task_id === task.id);
+                const isCompleted = userTask && userTask.status === 'completed';
+                
+                const taskElement = document.createElement('div');
+                taskElement.className = 'task-item';
+                
+                taskElement.innerHTML = `
+                    <div class="task-icon ${isCompleted ? 'completed' : 'available'}">
+                        <i class="fas fa-${getTaskIcon(task.task_type)}"></i>
+                    </div>
+                    <div class="task-details">
+                        <div class="task-title">${task.title}</div>
+                        <div class="task-description">${task.description}</div>
+                        <div class="task-meta">
+                            <span class="task-reward">₹${task.reward_amount}</span>
+                            ${task.proof_required ? '<span><i class="fas fa-camera"></i> Proof Required</span>' : ''}
+                        </div>
+                    </div>
+                    <button class="task-action" ${isCompleted ? 'disabled' : ''} data-task-id="${task.id}">
+                        ${isCompleted ? 'Completed' : 'Start'}
+                    </button>
+                `;
+                
+                tasksList.appendChild(taskElement);
+            });
+            
+            // Add event listeners to task buttons
+            document.querySelectorAll('.task-action:not(:disabled)').forEach(button => {
+                button.addEventListener('click', openTaskModal);
+            });
+        }
+
+        // Get appropriate icon for task type
+        function getTaskIcon(taskType) {
+            const icons = {
+                'app_install': 'download',
+                'survey': 'poll',
+                'video': 'play-circle',
+                'social': 'share-alt',
+                'referral': 'users'
+            };
+            
+            return icons[taskType] || 'tasks';
+        }
+
+        // Get instructions for task type
+        function getTaskInstructions(taskType) {
+            const instructions = {
+                'app_install': [
+                    'Download and install the app from the provided link',
+                    'Open the app and complete the registration',
+                    'Take a screenshot of the app home screen',
+                    'Submit the screenshot as proof'
+                ],
+                'survey': [
+                    'Click the survey link provided',
+                    'Complete all survey questions honestly',
+                    'Submit the survey and take a screenshot of completion',
+                    'Submit the screenshot as proof'
+                ],
+                'video': [
+                    'Watch the complete video (do not skip)',
+                    'Ensure video plays till the end',
+                    'Take a screenshot of the video completion screen',
+                    'Submit the screenshot as proof'
+                ],
+                'social': [
+                    'Share the provided content on your social media',
+                    'Make sure the post is public',
+                    'Take a screenshot of your shared post',
+                    'Submit the screenshot as proof'
+                ],
+                'referral': [
+                    'Share your referral link with friends',
+                    'Ask them to sign up using your link',
+                    'Once they complete registration, you get rewarded',
+                    'No proof required for this task'
+                ]
+            };
+            
+            return instructions[taskType] || ['Follow the instructions provided in the task description'];
+        }
+
+        // Update stats UI
+        function updateStatsUI() {
+            const completedToday = userTasks.filter(ut => ut.status === 'completed').length;
+            const earnedToday = userTasks
+                .filter(ut => ut.status === 'completed')
+                .reduce((total, ut) => {
+                    const task = tasks.find(t => t.id === ut.task_id);
+                    return total + (task ? parseFloat(task.reward_amount) : 0);
+                }, 0);
+            
+            document.getElementById('completedToday').textContent = completedToday;
+            document.getElementById('earnedToday').textContent = `₹${earnedToday.toFixed(2)}`;
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Category switching
+            document.querySelectorAll('.category').forEach(category => {
+                category.addEventListener('click', () => {
+                    document.querySelectorAll('.category').forEach(c => c.classList.remove('active'));
+                    category.classList.add('active');
+                    activeCategory = category.getAttribute('data-category');
+                    renderTasks();
+                });
+            });
+            
+            // Modal close
+            document.querySelector('.close-modal').addEventListener('click', () => {
+                document.getElementById('taskModal').classList.remove('active');
+            });
+            
+            // Submit proof button
+            document.getElementById('submitProof').addEventListener('click', completeTask);
+            
+            // Close modal when clicking outside
+            window.addEventListener('click', (e) => {
+                if (e.target === document.getElementById('taskModal')) {
+                    document.getElementById('taskModal').classList.remove('active');
+                }
+            });
+        }
+
+        // Open task modal
+        function openTaskModal(event) {
+            const taskId = event.target.getAttribute('data-task-id');
+            const task = tasks.find(t => t.id === taskId);
+            
+            if (!task) return;
+            
+            // Populate modal
+            document.getElementById('modalTaskTitle').textContent = task.title;
+            document.getElementById('modalTaskReward').textContent = `₹${task.reward_amount}`;
+            
+            const instructionsList = document.getElementById('modalTaskInstructions');
+            instructionsList.innerHTML = '';
+            
+            const instructions = getTaskInstructions(task.task_type);
+            instructions.forEach(instruction => {
+                const li = document.createElement('li');
+                li.textContent = instruction;
+                instructionsList.appendChild(li);
+            });
+            
+            // Store current task ID
+            document.getElementById('submitProof').setAttribute('data-task-id', taskId);
+            
+            // Show modal
+            document.getElementById('taskModal').classList.add('active');
+        }
+
+        // Complete task
+        async function completeTask() {
+            const taskId = document.getElementById('submitProof').getAttribute('data-task-id');
+            const task = tasks.find(t => t.id === taskId);
+            const button = document.getElementById('submitProof');
+            
+            if (!task) return;
+            
+            button.disabled = true;
+            button.textContent = 'Processing...';
+            
+            try {
+                // Create user task record
+                const { data, error } = await supabase
+                    .from('user_tasks')
+                    .insert([
+                        {
+                            user_id: currentUser.id,
+                            task_id: taskId,
+                            status: 'completed',
+                            completed_at: new Date().toISOString()
+                        }
+                    ]);
+                    
+                if (error) throw error;
+                
+                // Update user balance
+                const newBalance = userData.balance + parseFloat(task.reward_amount);
+                const newTotal = userData.total_earned + parseFloat(task.reward_amount);
+                
+                const { error: updateError } = await supabase
+                    .from('users')
+                    .update({ 
+                        balance: newBalance,
+                        total_earned: newTotal
+                    })
+                    .eq('id', currentUser.id);
+                    
+                if (updateError) throw updateError;
+                
+                // Add transaction
+                await supabase
+                    .from('transactions')
+                    .insert([
+                        {
+                            user_id: currentUser.id,
+                            type: 'task',
+                            amount: parseFloat(task.reward_amount),
+                            description: `Task: ${task.title}`
+                        }
+                    ]);
+                
+                // Update local data
+                userData.balance = newBalance;
+                userData.total_earned = newTotal;
+                
+                // Reload tasks to update UI
+                await loadTasks();
+                
+                // Close modal
+                document.getElementById('taskModal').classList.remove('active');
+                
+                showToast(`Task completed! ₹${task.reward_amount} added to your balance.`);
+                
+            } catch (error) {
+                console.error('Error completing task:', error);
+                showToast('Error completing task. Please try again.', true);
+            } finally {
+                button.disabled = false;
+                button.textContent = 'I Have Completed This Task';
+            }
+        }
+
+        // Show toast notification
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            
+            toastMessage.textContent = message;
+            
+            if (isError) {
+                toast.className = 'toast error';
+                toast.innerHTML = '<i class="fas fa-exclamation-circle"></i><span id="toast-message"></span>';
+            } else {
+                toast.className = 'toast';
+                toast.innerHTML = '<i class="fas fa-check-circle"></i><span id="toast-message"></span>';
+            }
+            
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
