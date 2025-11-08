@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wallet - Earnzy</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --primary-green: #00C853;
+            --secondary-white: #FFFFFF;
+            --accent-black: linear-gradient(180deg, #000000 0%, #1B1B1B 100%);
+            --highlight-green: #7CFC00;
+            --text-dark: #222222;
+            --background-gradient: linear-gradient(180deg, #FFFFFF 0%, #E8F5E9 50%, #00C853 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: var(--background-gradient);
+            color: var(--text-dark);
+            min-height: 100vh;
+            padding-bottom: 80px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 0 16px;
+        }
+
+        /* Header Styles */
+        header {
+            padding: 16px;
+            background: var(--secondary-white);
+            border-radius: 0 0 20px 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin-bottom: 16px;
+        }
+
+        .app-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            font-size: 20px;
+            color: var(--primary-green);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .balance-card {
+            background: var(--accent-black);
+            color: var(--secondary-white);
+            border-radius: 16px;
+            padding: 16px;
+            margin: 16px 0;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .balance-label {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .balance-amount {
+            font-family: 'Poppins', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            margin: 8px 0;
+        }
+
+        .balance-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        /* Section Styles */
+        .section-title {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            font-size: 18px;
+            margin: 24px 0 16px;
+        }
+
+        /* Withdrawal Card */
+        .withdrawal-card {
+            background: var(--secondary-white);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .withdrawal-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-label {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-input {
+            padding: 12px 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-green);
+            box-shadow: 0 0 0 2px rgba(0, 200, 83, 0.1);
+        }
+
+        .withdrawal-info {
+            background: rgba(0, 200, 83, 0.05);
+            border: 1px solid rgba(0, 200, 83, 0.2);
+            border-radius: 12px;
+            padding: 12px;
+            margin: 16px 0;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .info-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .withdraw-button {
+            background: var(--primary-green);
+            color: var(--secondary-white);
+            border: none;
+            border-radius: 50px;
+            padding: 16px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .withdraw-button:hover:not(:disabled) {
+            background: #00B34A;
+        }
+
+        .withdraw-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* Transactions List */
+        .transactions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .transaction-item {
+            background: var(--secondary-white);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .transaction-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .transaction-icon.credit {
+            background: rgba(76, 175, 80, 0.1);
+            color: #4CAF50;
+        }
+
+        .transaction-icon.debit {
+            background: rgba(244, 67, 54, 0.1);
+            color: #F44336;
+        }
+
+        .transaction-details {
+            flex: 1;
+        }
+
+        .transaction-title {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 500;
+            font-size: 16px;
+        }
+
+        .transaction-date {
+            font-size: 12px;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        .transaction-amount {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .transaction-amount.credit {
+            color: #4CAF50;
+        }
+
+        .transaction-amount.debit {
+            color: #F44336;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #888;
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--secondary-white);
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 12px;
+            color: #888;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .nav-item.active {
+            color: var(--primary-green);
+        }
+
+        .nav-icon {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary-green);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1001;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        .toast.error {
+            background: #f44336;
+        }
+
+        /* Loading Spinner */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-green);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            background: var(--secondary-white);
+            border-radius: 50px;
+            padding: 4px;
+            margin: 20px 0;
+        }
+
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 12px;
+            border-radius: 50px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tab.active {
+            background: var(--primary-green);
+            color: var(--secondary-white);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="app-bar">
+                <a href="dashboard.html" class="logo">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Wallet</span>
+                </a>
+                <div class="user-info">
+                    <i class="fas fa-bell"></i>
+                    <img id="userAvatar" class="user-avatar" src="" alt="User">
+                </div>
+            </div>
+            
+            <div class="balance-card">
+                <div class="balance-label">Your Balance</div>
+                <div class="balance-amount" id="balanceAmount">₹0.00</div>
+                <div class="balance-stats">
+                    <span>Total Earned: <span id="totalEarned">₹0.00</span></span>
+                    <span>Withdrawable: <span id="withdrawable">₹0.00</span></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Withdrawal Section -->
+        <div class="withdrawal-card">
+            <h2 class="section-title">Withdraw Funds</h2>
+            
+            <div class="withdrawal-info">
+                <div class="info-item">
+                    <span>Minimum Withdrawal:</span>
+                    <span>₹25.00</span>
+                </div>
+                <div class="info-item">
+                    <span>Processing Fee:</span>
+                    <span>₹2.00</span>
+                </div>
+                <div class="info-item">
+                    <span>Processing Time:</span>
+                    <span>24-48 hours</span>
+                </div>
+            </div>
+            
+            <form class="withdrawal-form" id="withdrawalForm">
+                <div class="form-group">
+                    <label class="form-label" for="upiId">UPI ID</label>
+                    <input type="text" class="form-input" id="upiId" placeholder="yourname@upi" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="withdrawAmount">Amount (₹)</label>
+                    <input type="number" class="form-input" id="withdrawAmount" placeholder="25.00" min="25" step="0.01" required>
+                </div>
+                
+                <button type="submit" class="withdraw-button" id="withdrawButton" disabled>
+                    Request Withdrawal
+                </button>
+            </form>
+        </div>
+
+        <!-- Transactions Tabs -->
+        <div class="tabs">
+            <div class="tab active" data-tab="all">All</div>
+            <div class="tab" data-tab="credits">Credits</div>
+            <div class="tab" data-tab="withdrawals">Withdrawals</div>
+        </div>
+
+        <!-- Transactions List -->
+        <h2 class="section-title">Transaction History</h2>
+        <div class="transactions-list" id="transactionsList">
+            <div class="loading">
+                <div class="loading-spinner"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toast-message"></span>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <a href="dashboard.html" class="nav-item">
+            <i class="fas fa-home nav-icon"></i>
+            <span>Home</span>
+        </a>
+        <a href="tasks.html" class="nav-item">
+            <i class="fas fa-tasks nav-icon"></i>
+            <span>Tasks</span>
+        </a>
+        <a href="wallet.html" class="nav-item active">
+            <i class="fas fa-wallet nav-icon"></i>
+            <span>Wallet</span>
+        </a>
+        <a href="referrals.html" class="nav-item">
+            <i class="fas fa-users nav-icon"></i>
+            <span>Referrals</span>
+        </a>
+        <a href="profile.html" class="nav-item">
+            <i class="fas fa-user nav-icon"></i>
+            <span>Profile</span>
+        </a>
+    </nav>
+
+    <script>
+        // Initialize Supabase
+        const SUPABASE_URL = 'https://yxzztomtgaqmboquoszg.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4enp0b210Z2FxbWJvcXVvc3pnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI0MzU4OTQsImV4cCI6MjA3ODAxMTg5NH0.NKaBpeTUE3zgcyCOl_mbF1NJHGry5I8vBDzkb1RS1DY';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        let currentUser = null;
+        let userData = null;
+        let transactions = [];
+        let activeTab = 'all';
+
+        // Check authentication and load user data
+        async function initApp() {
+            const { data: { session }, error } = await supabase.auth.getSession();
+            
+            if (!session) {
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            currentUser = session.user;
+            
+            // Load user data
+            await loadUserData();
+            
+            // Load transactions
+            await loadTransactions();
+            
+            // Setup event listeners
+            setupEventListeners();
+            
+            // Update UI with user data
+            updateUserUI();
+        }
+
+        // Load user data from database
+        async function loadUserData() {
+            const { data, error } = await supabase
+                .from('users')
+                .select('*')
+                .eq('id', currentUser.id)
+                .single();
+                
+            if (error) {
+                console.error('Error loading user data:', error);
+                return;
+            }
+            
+            userData = data;
+        }
+
+        // Load transactions
+        async function loadTransactions() {
+            const transactionsList = document.getElementById('transactionsList');
+            
+            const { data, error } = await supabase
+                .from('transactions')
+                .select('*')
+                .eq('user_id', currentUser.id)
+                .order('created_at', { ascending: false });
+                
+            if (error) {
+                console.error('Error loading transactions:', error);
+                transactionsList.innerHTML = '<div class="empty-state">Error loading transactions</div>';
+                return;
+            }
+            
+            transactions = data;
+            
+            // Load withdrawals
+            const { data: withdrawals, error: withdrawalsError } = await supabase
+                .from('withdrawals')
+                .select('*')
+                .eq('user_id', currentUser.id)
+                .order('created_at', { ascending: false });
+                
+            if (!withdrawalsError && withdrawals) {
+                // Add withdrawals to transactions
+                withdrawals.forEach(withdrawal => {
+                    transactions.push({
+                        id: withdrawal.id,
+                        user_id: withdrawal.user_id,
+                        type: 'withdrawal',
+                        amount: -withdrawal.amount,
+                        description: 'Withdrawal request',
+                        created_at: withdrawal.created_at,
+                        status: withdrawal.status
+                    });
+                });
+                
+                // Sort by date
+                transactions.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            }
+            
+            renderTransactions();
+        }
+
+        // Render transactions based on active tab
+        function renderTransactions() {
+            const transactionsList = document.getElementById('transactionsList');
+            
+            if (transactions.length === 0) {
+                transactionsList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">
+                            <i class="fas fa-receipt"></i>
+                        </div>
+                        <p>No transactions yet</p>
+                        <p style="font-size: 14px; margin-top: 8px;">Complete tasks to earn money!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let filteredTransactions = transactions;
+            
+            if (activeTab === 'credits') {
+                filteredTransactions = transactions.filter(t => t.amount > 0);
+            } else if (activeTab === 'withdrawals') {
+                filteredTransactions = transactions.filter(t => t.amount < 0);
+            }
+            
+            if (filteredTransactions.length === 0) {
+                transactionsList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">
+                            <i class="fas fa-receipt"></i>
+                        </div>
+                        <p>No ${activeTab} transactions</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            transactionsList.innerHTML = '';
+            
+            filteredTransactions.forEach(transaction => {
+                const isCredit = transaction.amount > 0;
+                const amount = Math.abs(transaction.amount);
+                const date = new Date(transaction.created_at).toLocaleDateString('en-IN', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric'
+                });
+                
+                const transactionElement = document.createElement('div');
+                transactionElement.className = 'transaction-item';
+                
+                transactionElement.innerHTML = `
+                    <div class="transaction-icon ${isCredit ? 'credit' : 'debit'}">
+                        <i class="fas fa-${isCredit ? 'plus' : 'minus'}"></i>
+                    </div>
+                    <div class="transaction-details">
+                        <div class="transaction-title">${transaction.description}</div>
+                        <div class="transaction-date">${date}</div>
+                    </div>
+                    <div class="transaction-amount ${isCredit ? 'credit' : 'debit'}">
+                        ${isCredit ? '+' : '-'}₹${amount.toFixed(2)}
+                    </div>
+                `;
+                
+                transactionsList.appendChild(transactionElement);
+            });
+        }
+
+        // Update user UI with data
+        function updateUserUI() {
+            if (userData) {
+                document.getElementById('balanceAmount').textContent = `₹${userData.balance.toFixed(2)}`;
+                document.getElementById('totalEarned').textContent = `₹${userData.total_earned.toFixed(2)}`;
+                
+                const withdrawable = Math.max(userData.balance - 25, 0);
+                document.getElementById('withdrawable').textContent = `₹${withdrawable.toFixed(2)}`;
+                
+                if (userData.avatar_url) {
+                    document.getElementById('userAvatar').src = userData.avatar_url;
+                }
+                
+                // Update withdrawal button state
+                const withdrawButton = document.getElementById('withdrawButton');
+                const withdrawAmount = document.getElementById('withdrawAmount');
+                
+                if (userData.balance >= 25) {
+                    withdrawButton.disabled = false;
+                    withdrawAmount.min = 25;
+                    withdrawAmount.max = Math.min(userData.balance, 150); // Daily limit
+                    withdrawAmount.placeholder = `25.00 - ${Math.min(userData.balance, 150).toFixed(2)}`;
+                } else {
+                    withdrawButton.disabled = true;
+                    withdrawAmount.placeholder = 'Minimum ₹25.00';
+                }
+            }
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Withdrawal form
+            document.getElementById('withdrawalForm').addEventListener('submit', handleWithdrawal);
+            
+            // Amount input validation
+            document.getElementById('withdrawAmount').addEventListener('input', validateAmount);
+            
+            // Tab switching
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    activeTab = tab.getAttribute('data-tab');
+                    renderTransactions();
+                });
+            });
+        }
+
+        // Validate withdrawal amount
+        function validateAmount() {
+            const amountInput = document.getElementById('withdrawAmount');
+            const amount = parseFloat(amountInput.value);
+            const minAmount = 25;
+            const maxAmount = Math.min(userData.balance, 150); // Daily limit
+            
+            if (amount < minAmount) {
+                amountInput.setCustomValidity(`Minimum withdrawal is ₹${minAmount}`);
+            } else if (amount > maxAmount) {
+                amountInput.setCustomValidity(`Maximum withdrawal is ₹${maxAmount}`);
+            } else {
+                amountInput.setCustomValidity('');
+            }
+        }
+
+        // Handle withdrawal request
+        async function handleWithdrawal(event) {
+            event.preventDefault();
+            
+            const upiId = document.getElementById('upiId').value;
+            const amount = parseFloat(document.getElementById('withdrawAmount').value);
+            const button = document.getElementById('withdrawButton');
+            
+            // Validation
+            if (!upiId.includes('@')) {
+                showToast('Please enter a valid UPI ID', true);
+                return;
+            }
+            
+            if (amount < 25 || amount > Math.min(userData.balance, 150)) {
+                showToast('Invalid withdrawal amount', true);
+                return;
+            }
+            
+            if (amount > userData.balance) {
+                showToast('Insufficient balance', true);
+                return;
+            }
+            
+            button.disabled = true;
+            button.textContent = 'Processing...';
+            
+            try {
+                // Create withdrawal request
+                const { data, error } = await supabase
+                    .from('withdrawals')
+                    .insert([
+                        {
+                            user_id: currentUser.id,
+                            amount: amount,
+                            upi_id: upiId,
+                            status: 'pending'
+                        }
+                    ]);
+                    
+                if (error) throw error;
+                
+                // Update user balance
+                const newBalance = userData.balance - amount;
+                
+                const { error: updateError } = await supabase
+                    .from('users')
+                    .update({ 
+                        balance: newBalance
+                    })
+                    .eq('id', currentUser.id);
+                    
+                if (updateError) throw updateError;
+                
+                // Add transaction record
+                await supabase
+                    .from('transactions')
+                    .insert([
+                        {
+                            user_id: currentUser.id,
+                            type: 'withdrawal',
+                            amount: -amount,
+                            description: `Withdrawal to ${upiId}`
+                        }
+                    ]);
+                
+                // Update local data
+                userData.balance = newBalance;
+                
+                // Update UI
+                updateUserUI();
+                await loadTransactions(); // Reload transactions to show the new withdrawal
+                
+                // Reset form
+                document.getElementById('withdrawalForm').reset();
+                
+                showToast(`Withdrawal request of ₹${amount} submitted successfully!`);
+                
+            } catch (error) {
+                console.error('Error processing withdrawal:', error);
+                showToast('Error processing withdrawal. Please try again.', true);
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Request Withdrawal';
+            }
+        }
+
+        // Show toast notification
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            
+            toastMessage.textContent = message;
+            
+            if (isError) {
+                toast.className = 'toast error';
+                toast.innerHTML = '<i class="fas fa-exclamation-circle"></i><span id="toast-message"></span>';
+            } else {
+                toast.className = 'toast';
+                toast.innerHTML = '<i class="fas fa-check-circle"></i><span id="toast-message"></span>';
+            }
+            
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
