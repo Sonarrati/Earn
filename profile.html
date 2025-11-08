@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - Earnzy</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --primary-green: #00C853;
+            --secondary-white: #FFFFFF;
+            --accent-black: linear-gradient(180deg, #000000 0%, #1B1B1B 100%);
+            --highlight-green: #7CFC00;
+            --text-dark: #222222;
+            --background-gradient: linear-gradient(180deg, #FFFFFF 0%, #E8F5E9 50%, #00C853 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: var(--background-gradient);
+            color: var(--text-dark);
+            min-height: 100vh;
+            padding-bottom: 80px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 0 16px;
+        }
+
+        /* Header Styles */
+        header {
+            padding: 16px;
+            background: var(--secondary-white);
+            border-radius: 0 0 20px 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin-bottom: 16px;
+        }
+
+        .app-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            font-size: 20px;
+            color: var(--primary-green);
+        }
+
+        /* Profile Section */
+        .profile-section {
+            background: var(--secondary-white);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            text-align: center;
+        }
+
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 auto 16px;
+            border: 3px solid var(--primary-green);
+        }
+
+        .profile-name {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+
+        .profile-email {
+            color: #666;
+            margin-bottom: 16px;
+        }
+
+        .profile-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-family: 'Poppins', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* Menu Section */
+        .menu-section {
+            background: var(--secondary-white);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .section-title {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            font-size: 18px;
+            margin-bottom: 16px;
+        }
+
+        .menu-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            border-radius: 12px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .menu-item:hover {
+            background: rgba(0, 200, 83, 0.05);
+        }
+
+        .menu-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(0, 200, 83, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-green);
+            font-size: 18px;
+        }
+
+        .menu-content {
+            flex: 1;
+        }
+
+        .menu-title {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 500;
+        }
+
+        .menu-description {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .menu-arrow {
+            color: #888;
+        }
+
+        /* Support Section */
+        .support-section {
+            background: var(--secondary-white);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .support-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .support-option {
+            background: rgba(0, 200, 83, 0.05);
+            border: 1px solid rgba(0, 200, 83, 0.2);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .support-option:hover {
+            background: rgba(0, 200, 83, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .support-icon {
+            font-size: 24px;
+            color: var(--primary-green);
+            margin-bottom: 8px;
+        }
+
+        .support-label {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        /* Logout Button */
+        .logout-section {
+            text-align: center;
+            margin: 32px 0;
+        }
+
+        .logout-button {
+            background: transparent;
+            color: #f44336;
+            border: 1px solid #f44336;
+            border-radius: 50px;
+            padding: 12px 32px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .logout-button:hover {
+            background: #f44336;
+            color: white;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--secondary-white);
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 12px;
+            color: #888;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .nav-item.active {
+            color: var(--primary-green);
+        }
+
+        .nav-icon {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary-green);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1001;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        .toast.error {
+            background: #f44336;
+        }
+
+        /* Loading Spinner */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-green);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="app-bar">
+                <a href="dashboard.html" class="logo">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Profile</span>
+                </a>
+                <div style="width: 40px;"></div> <!-- Spacer for balance -->
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Profile Section -->
+        <div class="profile-section">
+            <img id="userAvatar" class="profile-avatar" src="" alt="Profile">
+            <div class="profile-name" id="userName">Loading...</div>
+            <div class="profile-email" id="userEmail">Loading...</div>
+            
+            <div class="profile-stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="totalEarned">₹0.00</div>
+                    <div class="stat-label">Total Earned</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="tasksCompleted">0</div>
+                    <div class="stat-label">Tasks Completed</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Account Menu -->
+        <div class="menu-section">
+            <h2 class="section-title">Account</h2>
+            <div class="menu-list">
+                <a href="wallet.html" class="menu-item">
+                    <div class="menu-icon">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <div class="menu-content">
+                        <div class="menu-title">Wallet & Balance</div>
+                        <div class="menu-description">View your earnings and withdrawal history</div>
+                    </div>
+                    <div class="menu-arrow">
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                </a>
+                
+                <a href="referrals.html" class="menu-item">
+                    <div class="menu-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="menu-content">
+                        <div class="menu-title">Refer & Earn</div>
+                        <div class="menu-description">Invite friends and earn rewards</div>
+                    </div>
+                    <div class="menu-arrow">
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                </a>
+                
+                <div class="menu-item">
+                    <div class="menu-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="menu-content">
+                        <div class="menu-title">Privacy & Security</div>
+                        <div class="menu-description">Manage your account security</div>
+                    </div>
+                    <div class="menu-arrow">
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- App Settings -->
+        <div class="menu-section">
+            <h2 class="section-title">App Settings</h2>
+            <div class="menu-list">
+                <div class="menu-item">
+                    <div class="menu-icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <div class="menu-content">
+                        <div class="menu-title">Notifications</div>
+                        <div class="menu-description">Manage your notification preferences</div>
+                    </div>
+                    <div class="menu-arrow">
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                </div>
+                
+                <div class="menu-item">
+                    <div class="menu-icon">
+                        <i class="fas fa-globe"></i>
+                    </div>
+                    <div class="menu-content">
+                        <div class="menu-title">Language</div>
+                        <div class="menu-description">English (Default)</div>
+                    </div>
+                    <div class="menu-arrow">
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                </div>
+                
+                <div class="menu-item">
+                    <div class="menu-icon">
+                        <i class="fas fa-moon"></i>
+                    </div>
+                    <div class="menu-content">
+                        <div class="menu-title">Dark Mode</div>
+                        <div class="menu-description">Switch to dark theme</div>
+                    </div>
+                    <div class="menu-arrow">
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Support -->
+        <div class="support-section">
+            <h2 class="section-title">Help & Support</h2>
+            <div class="support-options">
+                <div class="support-option" onclick="showToast('Support email: support@earnzy.in')">
+                    <div class="support-icon">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <div class="support-label">Email Support</div>
+                </div>
+                
+                <div class="support-option" onclick="showToast('FAQs section coming soon')">
+                    <div class="support-icon">
+                        <i class="fas fa-question-circle"></i>
+                    </div>
+                    <div class="support-label">FAQs</div>
+                </div>
+                
+                <div class="support-option" onclick="showToast('Terms of Service')">
+                    <div class="support-icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <div class="support-label">Terms</div>
+                </div>
+                
+                <div class="support-option" onclick="showToast('Privacy Policy')">
+                    <div class="support-icon">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <div class="support-label">Privacy</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logout -->
+        <div class="logout-section">
+            <button class="logout-button" id="logoutButton">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </main>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toast-message"></span>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <a href="dashboard.html" class="nav-item">
+            <i class="fas fa-home nav-icon"></i>
+            <span>Home</span>
+        </a>
+        <a href="tasks.html" class="nav-item">
+            <i class="fas fa-tasks nav-icon"></i>
+            <span>Tasks</span>
+        </a>
+        <a href="wallet.html" class="nav-item">
+            <i class="fas fa-wallet nav-icon"></i>
+            <span>Wallet</span>
+        </a>
+        <a href="referrals.html" class="nav-item">
+            <i class="fas fa-users nav-icon"></i>
+            <span>Referrals</span>
+        </a>
+        <a href="profile.html" class="nav-item active">
+            <i class="fas fa-user nav-icon"></i>
+            <span>Profile</span>
+        </a>
+    </nav>
+
+    <script>
+        // Initialize Supabase
+        const SUPABASE_URL = 'https://yxzztomtgaqmboquoszg.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4enp0b210Z2FxbWJvcXVvc3pnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI0MzU4OTQsImV4cCI6MjA3ODAxMTg5NH0.NKaBpeTUE3zgcyCOl_mbF1NJHGry5I8vBDzkb1RS1DY';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        let currentUser = null;
+        let userData = null;
+
+        // Check authentication and load user data
+        async function initApp() {
+            const { data: { session }, error } = await supabase.auth.getSession();
+            
+            if (!session) {
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            currentUser = session.user;
+            
+            // Load user data
+            await loadUserData();
+            
+            // Setup event listeners
+            setupEventListeners();
+            
+            // Update UI with user data
+            updateUserUI();
+        }
+
+        // Load user data from database
+        async function loadUserData() {
+            const { data, error } = await supabase
+                .from('users')
+                .select('*')
+                .eq('id', currentUser.id)
+                .single();
+                
+            if (error) {
+                console.error('Error loading user data:', error);
+                return;
+            }
+            
+            userData = data;
+            
+            // Load completed tasks count
+            const { data: tasksData, error: tasksError } = await supabase
+                .from('user_tasks')
+                .select('id')
+                .eq('user_id', currentUser.id)
+                .eq('status', 'completed');
+                
+            if (!tasksError) {
+                userData.tasksCompleted = tasksData ? tasksData.length : 0;
+            }
+        }
+
+        // Update UI with user data
+        function updateUserUI() {
+            if (userData) {
+                document.getElementById('userName').textContent = userData.full_name || 'User';
+                document.getElementById('userEmail').textContent = userData.email;
+                document.getElementById('totalEarned').textContent = `₹${userData.total_earned?.toFixed(2) || '0.00'}`;
+                document.getElementById('tasksCompleted').textContent = userData.tasksCompleted || 0;
+                
+                if (userData.avatar_url) {
+                    document.getElementById('userAvatar').src = userData.avatar_url;
+                } else {
+                    document.getElementById('userAvatar').src = 'https://via.placeholder.com/80?text=USER';
+                }
+            }
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Logout button
+            document.getElementById('logoutButton').addEventListener('click', handleLogout);
+        }
+
+        // Handle logout
+        async function handleLogout() {
+            const button = document.getElementById('logoutButton');
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging out...';
+            
+            try {
+                const { error } = await supabase.auth.signOut();
+                
+                if (error) throw error;
+                
+                // Redirect to login page
+                window.location.href = 'index.html';
+                
+            } catch (error) {
+                console.error('Error logging out:', error);
+                showToast('Error logging out. Please try again.', true);
+                
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-sign-out-alt"></i> Logout';
+            }
+        }
+
+        // Show toast notification
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            
+            toastMessage.textContent = message;
+            
+            if (isError) {
+                toast.className = 'toast error';
+                toast.innerHTML = '<i class="fas fa-exclamation-circle"></i><span id="toast-message"></span>';
+            } else {
+                toast.className = 'toast';
+                toast.innerHTML = '<i class="fas fa-check-circle"></i><span id="toast-message"></span>';
+            }
+            
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
