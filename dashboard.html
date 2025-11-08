@@ -1,0 +1,1333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Earnzy</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --primary-green: #00C853;
+            --secondary-white: #FFFFFF;
+            --accent-black: linear-gradient(180deg, #000000 0%, #1B1B1B 100%);
+            --highlight-green: #7CFC00;
+            --text-dark: #222222;
+            --background-gradient: linear-gradient(180deg, #FFFFFF 0%, #E8F5E9 50%, #00C853 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: var(--background-gradient);
+            color: var(--text-dark);
+            min-height: 100vh;
+            padding-bottom: 80px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 0 16px;
+        }
+
+        /* Header Styles */
+        header {
+            padding: 16px;
+            background: var(--secondary-white);
+            border-radius: 0 0 20px 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin-bottom: 16px;
+        }
+
+        .app-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            font-size: 20px;
+            color: var(--primary-green);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .balance-card {
+            background: var(--accent-black);
+            color: var(--secondary-white);
+            border-radius: 16px;
+            padding: 16px;
+            margin: 16px 0;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .balance-label {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .balance-amount {
+            font-family: 'Poppins', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            margin: 8px 0;
+        }
+
+        .balance-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        /* Reward Cards */
+        .section-title {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            font-size: 18px;
+            margin: 24px 0 16px;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .reward-card {
+            background: var(--secondary-white);
+            border-radius: 16px;
+            padding: 20px 16px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 1px solid rgba(0, 200, 83, 0.1);
+        }
+
+        .reward-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+            border-color: var(--highlight-green);
+        }
+
+        .reward-card.disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .reward-card.disabled:hover {
+            transform: none;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .reward-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 12px;
+            font-size: 20px;
+        }
+
+        .checkin-icon { background: rgba(0, 200, 83, 0.1); color: var(--primary-green); }
+        .scratch-icon { background: rgba(255, 193, 7, 0.1); color: #FFC107; }
+        .treasure-icon { background: rgba(156, 39, 176, 0.1); color: #9C27B0; }
+        .ads-icon { background: rgba(33, 150, 243, 0.1); color: #2196F3; }
+        .tasks-icon { background: rgba(244, 67, 54, 0.1); color: #F44336; }
+        .referral-icon { background: rgba(76, 175, 80, 0.1); color: #4CAF50; }
+
+        .reward-title {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+
+        .reward-amount {
+            font-size: 14px;
+            color: var(--primary-green);
+            font-weight: 500;
+        }
+
+        .reward-status {
+            font-size: 12px;
+            margin-top: 8px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            background: rgba(0, 200, 83, 0.1);
+            color: var(--primary-green);
+        }
+
+        .reward-status.completed {
+            background: rgba(158, 158, 158, 0.1);
+            color: #9E9E9E;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--secondary-white);
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 12px;
+            color: #888;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .nav-item.active {
+            color: var(--primary-green);
+        }
+
+        .nav-icon {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+
+        /* Floating Action Button */
+        .fab {
+            position: fixed;
+            bottom: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--primary-green);
+            color: var(--secondary-white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 6px 16px rgba(0, 200, 83, 0.4);
+            z-index: 99;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .fab:hover {
+            transform: translateX(-50%) scale(1.1);
+            box-shadow: 0 8px 20px rgba(0, 200, 83, 0.6);
+        }
+
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-content {
+            background: var(--secondary-white);
+            width: 100%;
+            max-width: 480px;
+            border-radius: 24px 24px 0 0;
+            padding: 24px;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal.active .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            font-size: 20px;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #888;
+            cursor: pointer;
+        }
+
+        /* Daily Check-in */
+        .checkin-calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin: 20px 0;
+        }
+
+        .checkin-day {
+            aspect-ratio: 1;
+            background: #f5f5f5;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .checkin-day.checked {
+            background: var(--primary-green);
+            color: var(--secondary-white);
+        }
+
+        .checkin-day.today {
+            border: 2px solid var(--primary-green);
+        }
+
+        .checkin-reward {
+            font-size: 10px;
+            margin-top: 4px;
+        }
+
+        .checkin-action {
+            background: var(--primary-green);
+            color: var(--secondary-white);
+            border: none;
+            border-radius: 50px;
+            padding: 12px 24px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 500;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 16px;
+            transition: all 0.2s ease;
+        }
+
+        .checkin-action:hover {
+            background: #00B34A;
+        }
+
+        .checkin-action:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* Scratch Card */
+        .scratch-container {
+            background: linear-gradient(135deg, #FF9800, #FF5722);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 16px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .scratch-canvas {
+            width: 100%;
+            height: 200px;
+            background: #ddd;
+            border-radius: 12px;
+            cursor: pointer;
+            touch-action: none;
+        }
+
+        .scratch-result {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-dark);
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            font-size: 24px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        /* Tasks List */
+        .task-item {
+            background: var(--secondary-white);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .task-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 200, 83, 0.1);
+            color: var(--primary-green);
+            font-size: 18px;
+        }
+
+        .task-details {
+            flex: 1;
+        }
+
+        .task-title {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 500;
+            font-size: 16px;
+        }
+
+        .task-reward {
+            color: var(--primary-green);
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .task-action {
+            background: var(--primary-green);
+            color: var(--secondary-white);
+            border: none;
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .task-action:hover {
+            background: #00B34A;
+        }
+
+        .task-action:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary-green);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1001;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        /* Loading Spinner */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-green);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .slide-up {
+            animation: slideUp 0.4s ease;
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 12px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary-green);
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="app-bar">
+                <div class="logo">
+                    <i class="fas fa-gem"></i>
+                    <span>Earnzy</span>
+                </div>
+                <div class="user-info">
+                    <i class="fas fa-bell"></i>
+                    <img id="userAvatar" class="user-avatar" src="" alt="User">
+                </div>
+            </div>
+            
+            <div class="balance-card">
+                <div class="balance-label">Your Balance</div>
+                <div class="balance-amount" id="balanceAmount">₹0.00</div>
+                <div class="balance-stats">
+                    <span>Total Earned: <span id="totalEarned">₹0.00</span></span>
+                    <span>Withdrawable: <span id="withdrawable">₹0.00</span></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container">
+        <h2 class="section-title">Daily Rewards</h2>
+        <div class="cards-grid">
+            <div class="reward-card" id="checkin-card">
+                <div class="reward-icon checkin-icon">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <div class="reward-title">Daily Check-in</div>
+                <div class="reward-amount">₹0.50</div>
+                <div class="reward-status" id="checkin-status">Available</div>
+            </div>
+            
+            <div class="reward-card" id="scratch-card">
+                <div class="reward-icon scratch-icon">
+                    <i class="fas fa-ticket-alt"></i>
+                </div>
+                <div class="reward-title">Scratch Card</div>
+                <div class="reward-amount">Up to ₹5</div>
+                <div class="reward-status" id="scratch-status">Available</div>
+            </div>
+            
+            <div class="reward-card" id="treasure-card">
+                <div class="reward-icon treasure-icon">
+                    <i class="fas fa-gift"></i>
+                </div>
+                <div class="reward-title">Treasure Box</div>
+                <div class="reward-amount">₹0.5 - ₹8</div>
+                <div class="reward-status" id="treasure-status">Available</div>
+            </div>
+            
+            <div class="reward-card" id="ads-card">
+                <div class="reward-icon ads-icon">
+                    <i class="fas fa-play-circle"></i>
+                </div>
+                <div class="reward-title">Watch Ads</div>
+                <div class="reward-amount">₹0.10 each</div>
+                <div class="reward-status" id="ads-status">0/20 today</div>
+            </div>
+        </div>
+
+        <h2 class="section-title">Tasks & Offers</h2>
+        <div id="tasks-list">
+            <div class="loading">
+                <div class="loading-spinner"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toast-message"></span>
+    </div>
+
+    <!-- Floating Action Button -->
+    <div class="fab" id="fab">
+        <i class="fas fa-plus"></i>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <a href="dashboard.html" class="nav-item active">
+            <i class="fas fa-home nav-icon"></i>
+            <span>Home</span>
+        </a>
+        <a href="tasks.html" class="nav-item">
+            <i class="fas fa-tasks nav-icon"></i>
+            <span>Tasks</span>
+        </a>
+        <a href="wallet.html" class="nav-item">
+            <i class="fas fa-wallet nav-icon"></i>
+            <span>Wallet</span>
+        </a>
+        <a href="referrals.html" class="nav-item">
+            <i class="fas fa-users nav-icon"></i>
+            <span>Referrals</span>
+        </a>
+        <a href="profile.html" class="nav-item">
+            <i class="fas fa-user nav-icon"></i>
+            <span>Profile</span>
+        </a>
+    </nav>
+
+    <!-- Daily Check-in Modal -->
+    <div class="modal" id="checkin-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Daily Check-in</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <p>Check in daily to earn rewards! Streak for 7 days to get a bonus.</p>
+            
+            <div class="checkin-calendar" id="checkin-calendar">
+                <!-- Calendar will be populated by JavaScript -->
+            </div>
+            
+            <button class="checkin-action" id="checkin-button">Check-in Today</button>
+        </div>
+    </div>
+
+    <!-- Scratch Card Modal -->
+    <div class="modal" id="scratch-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Scratch Card</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <p>Scratch the card to reveal your reward!</p>
+            
+            <div class="scratch-container">
+                <canvas class="scratch-canvas" id="scratch-canvas"></canvas>
+                <div class="scratch-result" id="scratch-result">
+                    <i class="fas fa-gift" style="font-size: 48px; margin-bottom: 16px;"></i>
+                    <span id="scratch-reward-amount">You won ₹0.00!</span>
+                </div>
+            </div>
+            
+            <p style="text-align: center; font-size: 14px; margin-top: 16px;">Scratch cards reset daily at midnight</p>
+        </div>
+    </div>
+
+    <!-- FAB Menu Modal -->
+    <div class="modal" id="fab-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Quick Actions</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            
+            <div class="cards-grid" style="grid-template-columns: 1fr;">
+                <div class="reward-card" id="fab-checkin">
+                    <div class="reward-icon checkin-icon">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="reward-title">Daily Check-in</div>
+                    <div class="reward-amount">₹0.50</div>
+                </div>
+                
+                <div class="reward-card" id="fab-scratch">
+                    <div class="reward-icon scratch-icon">
+                        <i class="fas fa-ticket-alt"></i>
+                    </div>
+                    <div class="reward-title">Scratch Card</div>
+                    <div class="reward-amount">Up to ₹5</div>
+                </div>
+                
+                <div class="reward-card" id="fab-treasure">
+                    <div class="reward-icon treasure-icon">
+                        <i class="fas fa-gift"></i>
+                    </div>
+                    <div class="reward-title">Treasure Box</div>
+                    <div class="reward-amount">₹0.5 - ₹8</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Supabase
+        const SUPABASE_URL = 'https://yxzztomtgaqmboquoszg.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4enp0b210Z2FxbWJvcXVvc3pnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI0MzU4OTQsImV4cCI6MjA3ODAxMTg5NH0.NKaBpeTUE3zgcyCOl_mbF1NJHGry5I8vBDzkb1RS1DY';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        let currentUser = null;
+        let userData = null;
+        let todaysRewards = {};
+        
+        // Check authentication and load user data
+        async function initApp() {
+            const { data: { session }, error } = await supabase.auth.getSession();
+            
+            if (!session) {
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            currentUser = session.user;
+            
+            // Load user data
+            await loadUserData();
+            
+            // Load today's rewards
+            await loadTodaysRewards();
+            
+            // Load tasks
+            await loadTasks();
+            
+            // Setup event listeners
+            setupEventListeners();
+            
+            // Update UI with user data
+            updateUserUI();
+        }
+        
+        // Load user data from database
+        async function loadUserData() {
+            const { data, error } = await supabase
+                .from('users')
+                .select('*')
+                .eq('id', currentUser.id)
+                .single();
+                
+            if (error) {
+                console.error('Error loading user data:', error);
+                return;
+            }
+            
+            userData = data;
+        }
+        
+        // Load today's rewards
+        async function loadTodaysRewards() {
+            const today = new Date().toISOString().split('T')[0];
+            
+            const { data, error } = await supabase
+                .from('daily_rewards')
+                .select('*')
+                .eq('user_id', currentUser.id)
+                .gte('created_at', today + 'T00:00:00Z')
+                .lte('created_at', today + 'T23:59:59Z');
+                
+            if (error) {
+                console.error('Error loading today\'s rewards:', error);
+                return;
+            }
+            
+            todaysRewards = {};
+            data.forEach(reward => {
+                todaysRewards[reward.type] = true;
+            });
+            
+            updateRewardsUI();
+        }
+        
+        // Load tasks
+        async function loadTasks() {
+            const tasksList = document.getElementById('tasks-list');
+            
+            // Get active tasks
+            const { data: tasks, error } = await supabase
+                .from('tasks')
+                .select('*')
+                .eq('status', 'active');
+                
+            if (error) {
+                console.error('Error loading tasks:', error);
+                tasksList.innerHTML = '<p>Error loading tasks</p>';
+                return;
+            }
+            
+            // Get user's completed tasks for today
+            const today = new Date().toISOString().split('T')[0];
+            const { data: userTasks, error: userTasksError } = await supabase
+                .from('user_tasks')
+                .select('task_id')
+                .eq('user_id', currentUser.id)
+                .eq('status', 'completed')
+                .gte('completed_at', today + 'T00:00:00Z')
+                .lte('completed_at', today + 'T23:59:59Z');
+                
+            const completedTaskIds = userTasks ? userTasks.map(ut => ut.task_id) : [];
+            
+            // Render tasks
+            if (tasks.length === 0) {
+                tasksList.innerHTML = '<p>No tasks available at the moment</p>';
+                return;
+            }
+            
+            tasksList.innerHTML = '';
+            tasks.forEach(task => {
+                const isCompleted = completedTaskIds.includes(task.id);
+                
+                const taskElement = document.createElement('div');
+                taskElement.className = 'task-item';
+                taskElement.innerHTML = `
+                    <div class="task-icon">
+                        <i class="fas fa-${getTaskIcon(task.task_type)}"></i>
+                    </div>
+                    <div class="task-details">
+                        <div class="task-title">${task.title}</div>
+                        <div class="task-reward">Reward: ₹${task.reward_amount}</div>
+                    </div>
+                    <button class="task-action" ${isCompleted ? 'disabled' : ''} data-task-id="${task.id}">
+                        ${isCompleted ? 'Completed' : 'Start'}
+                    </button>
+                `;
+                
+                tasksList.appendChild(taskElement);
+            });
+            
+            // Add event listeners to task buttons
+            document.querySelectorAll('.task-action:not(:disabled)').forEach(button => {
+                button.addEventListener('click', handleTaskAction);
+            });
+        }
+        
+        // Get appropriate icon for task type
+        function getTaskIcon(taskType) {
+            const icons = {
+                'app_install': 'download',
+                'survey': 'poll',
+                'video': 'play-circle',
+                'social': 'share-alt',
+                'referral': 'users'
+            };
+            
+            return icons[taskType] || 'tasks';
+        }
+        
+        // Handle task action
+        function handleTaskAction(event) {
+            const taskId = event.target.getAttribute('data-task-id');
+            // In a real app, this would open the task or mark it as completed
+            showToast('Task started! Complete it to earn reward.');
+        }
+        
+        // Update user UI with data
+        function updateUserUI() {
+            if (userData) {
+                document.getElementById('balanceAmount').textContent = `₹${userData.balance.toFixed(2)}`;
+                document.getElementById('totalEarned').textContent = `₹${userData.total_earned.toFixed(2)}`;
+                document.getElementById('withdrawable').textContent = `₹${Math.max(userData.balance - 25, 0).toFixed(2)}`;
+                
+                if (userData.avatar_url) {
+                    document.getElementById('userAvatar').src = userData.avatar_url;
+                }
+            }
+        }
+        
+        // Update rewards UI based on today's completion
+        function updateRewardsUI() {
+            // Check-in
+            const checkinStatus = document.getElementById('checkin-status');
+            if (todaysRewards.checkin) {
+                checkinStatus.textContent = 'Completed';
+                checkinStatus.classList.add('completed');
+                document.getElementById('checkin-card').classList.add('disabled');
+            } else {
+                checkinStatus.textContent = 'Available';
+                checkinStatus.classList.remove('completed');
+                document.getElementById('checkin-card').classList.remove('disabled');
+            }
+            
+            // Scratch card
+            const scratchStatus = document.getElementById('scratch-status');
+            if (todaysRewards.scratch) {
+                scratchStatus.textContent = 'Completed';
+                scratchStatus.classList.add('completed');
+                document.getElementById('scratch-card').classList.add('disabled');
+            } else {
+                scratchStatus.textContent = 'Available';
+                scratchStatus.classList.remove('completed');
+                document.getElementById('scratch-card').classList.remove('disabled');
+            }
+            
+            // Treasure box
+            const treasureStatus = document.getElementById('treasure-status');
+            if (todaysRewards.treasure) {
+                treasureStatus.textContent = 'Completed';
+                treasureStatus.classList.add('completed');
+                document.getElementById('treasure-card').classList.add('disabled');
+            } else {
+                treasureStatus.textContent = 'Available';
+                treasureStatus.classList.remove('completed');
+                document.getElementById('treasure-card').classList.remove('disabled');
+            }
+            
+            // Ads (simplified - in real app would count ads watched today)
+            const adsToday = 0; // This would come from database
+            const adsStatus = document.getElementById('ads-status');
+            adsStatus.textContent = `${adsToday}/20 today`;
+        }
+        
+        // Setup event listeners
+        function setupEventListeners() {
+            // Modal functionality
+            const checkinCard = document.getElementById('checkin-card');
+            const scratchCard = document.getElementById('scratch-card');
+            const fab = document.getElementById('fab');
+            
+            const checkinModal = document.getElementById('checkin-modal');
+            const scratchModal = document.getElementById('scratch-modal');
+            const fabModal = document.getElementById('fab-modal');
+            
+            const closeButtons = document.querySelectorAll('.close-modal');
+            
+            // Open modals
+            checkinCard.addEventListener('click', () => {
+                if (!todaysRewards.checkin) {
+                    checkinModal.classList.add('active');
+                    renderCheckinCalendar();
+                }
+            });
+            
+            scratchCard.addEventListener('click', () => {
+                if (!todaysRewards.scratch) {
+                    scratchModal.classList.add('active');
+                    initScratchCard();
+                }
+            });
+            
+            fab.addEventListener('click', () => {
+                fabModal.classList.add('active');
+            });
+            
+            // FAB menu items
+            document.getElementById('fab-checkin').addEventListener('click', () => {
+                fabModal.classList.remove('active');
+                if (!todaysRewards.checkin) {
+                    checkinModal.classList.add('active');
+                    renderCheckinCalendar();
+                }
+            });
+            
+            document.getElementById('fab-scratch').addEventListener('click', () => {
+                fabModal.classList.remove('active');
+                if (!todaysRewards.scratch) {
+                    scratchModal.classList.add('active');
+                    initScratchCard();
+                }
+            });
+            
+            document.getElementById('fab-treasure').addEventListener('click', () => {
+                fabModal.classList.remove('active');
+                showToast('Treasure box feature coming soon!');
+            });
+            
+            // Close modals
+            closeButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    checkinModal.classList.remove('active');
+                    scratchModal.classList.remove('active');
+                    fabModal.classList.remove('active');
+                });
+            });
+            
+            // Close modal when clicking outside content
+            window.addEventListener('click', (e) => {
+                if (e.target === checkinModal) {
+                    checkinModal.classList.remove('active');
+                }
+                if (e.target === scratchModal) {
+                    scratchModal.classList.remove('active');
+                }
+                if (e.target === fabModal) {
+                    fabModal.classList.remove('active');
+                }
+            });
+            
+            // Check-in button
+            document.getElementById('checkin-button').addEventListener('click', handleCheckin);
+        }
+        
+        // Render check-in calendar
+        async function renderCheckinCalendar() {
+            const calendar = document.getElementById('checkin-calendar');
+            calendar.innerHTML = '';
+            
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const today = new Date();
+            const dayOfWeek = today.getDay();
+            
+            // Get check-in history for the last 7 days
+            const sevenDaysAgo = new Date();
+            sevenDaysAgo.setDate(today.getDate() - 6);
+            
+            const { data, error } = await supabase
+                .from('daily_rewards')
+                .select('created_at')
+                .eq('user_id', currentUser.id)
+                .eq('type', 'checkin')
+                .gte('created_at', sevenDaysAgo.toISOString())
+                .lte('created_at', today.toISOString());
+                
+            const checkinDates = data ? data.map(reward => {
+                const date = new Date(reward.created_at);
+                return date.toISOString().split('T')[0];
+            }) : [];
+            
+            // Create calendar days
+            for (let i = 0; i < 7; i++) {
+                const date = new Date();
+                date.setDate(today.getDate() - (6 - i));
+                
+                const dayElement = document.createElement('div');
+                dayElement.className = 'checkin-day';
+                
+                const dateString = date.toISOString().split('T')[0];
+                const isChecked = checkinDates.includes(dateString);
+                const isToday = date.toDateString() === today.toDateString();
+                
+                if (isChecked) {
+                    dayElement.classList.add('checked');
+                }
+                
+                if (isToday) {
+                    dayElement.classList.add('today');
+                }
+                
+                const rewardAmount = i === 6 ? '₹1.00' : '₹0.50'; // Sunday bonus
+                
+                dayElement.innerHTML = `
+                    <span>${days[date.getDay()]}</span>
+                    <span class="checkin-reward">${rewardAmount}</span>
+                `;
+                
+                calendar.appendChild(dayElement);
+            }
+        }
+        
+        // Handle daily check-in
+        async function handleCheckin() {
+            const button = document.getElementById('checkin-button');
+            button.disabled = true;
+            button.textContent = 'Processing...';
+            
+            try {
+                // Add reward to database
+                const { data, error } = await supabase
+                    .from('daily_rewards')
+                    .insert([
+                        {
+                            user_id: currentUser.id,
+                            type: 'checkin',
+                            amount: 0.50,
+                            status: 'completed'
+                        }
+                    ]);
+                    
+                if (error) throw error;
+                
+                // Update user balance
+                const newBalance = userData.balance + 0.50;
+                const newTotal = userData.total_earned + 0.50;
+                
+                const { error: updateError } = await supabase
+                    .from('users')
+                    .update({ 
+                        balance: newBalance,
+                        total_earned: newTotal
+                    })
+                    .eq('id', currentUser.id);
+                    
+                if (updateError) throw updateError;
+                
+                // Add transaction
+                await supabase
+                    .from('transactions')
+                    .insert([
+                        {
+                            user_id: currentUser.id,
+                            type: 'reward',
+                            amount: 0.50,
+                            description: 'Daily check-in reward'
+                        }
+                    ]);
+                
+                // Update local data
+                userData.balance = newBalance;
+                userData.total_earned = newTotal;
+                todaysRewards.checkin = true;
+                
+                // Update UI
+                updateUserUI();
+                updateRewardsUI();
+                
+                // Close modal and show success
+                document.getElementById('checkin-modal').classList.remove('active');
+                showToast('Daily check-in completed! ₹0.50 added to your balance.');
+                
+            } catch (error) {
+                console.error('Error processing check-in:', error);
+                showToast('Error processing check-in. Please try again.', true);
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Check-in Today';
+            }
+        }
+        
+        // Scratch card functionality
+        function initScratchCard() {
+            const canvas = document.getElementById('scratch-canvas');
+            const ctx = canvas.getContext('2d');
+            const result = document.getElementById('scratch-result');
+            
+            // Set canvas dimensions
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            
+            // Draw scratch card overlay
+            ctx.fillStyle = '#888';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.font = '16px Poppins';
+            ctx.fillStyle = '#fff';
+            ctx.textAlign = 'center';
+            ctx.fillText('Scratch to reveal prize!', canvas.width / 2, canvas.height / 2);
+            
+            let isDrawing = false;
+            let totalScratched = 0;
+            const threshold = 0.5; // 50% needs to be scratched
+            
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('touchstart', startDrawing);
+            
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('touchmove', draw);
+            
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('touchend', stopDrawing);
+            
+            function startDrawing(e) {
+                isDrawing = true;
+                draw(e);
+            }
+            
+            function stopDrawing() {
+                isDrawing = false;
+                ctx.beginPath();
+                
+                // Check if enough is scratched to reveal
+                if (totalScratched / (canvas.width * canvas.height) > threshold) {
+                    revealScratchReward();
+                }
+            }
+            
+            function draw(e) {
+                if (!isDrawing) return;
+                
+                const rect = canvas.getBoundingClientRect();
+                let x, y;
+                
+                if (e.type.includes('touch')) {
+                    x = e.touches[0].clientX - rect.left;
+                    y = e.touches[0].clientY - rect.top;
+                } else {
+                    x = e.clientX - rect.left;
+                    y = e.clientY - rect.top;
+                }
+                
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.beginPath();
+                ctx.arc(x, y, 20, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Calculate how much has been scratched
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const pixels = imageData.data;
+                let scratchedPixels = 0;
+                
+                for (let i = 0; i < pixels.length; i += 4) {
+                    if (pixels[i + 3] === 0) {
+                        scratchedPixels++;
+                    }
+                }
+                
+                totalScratched = scratchedPixels;
+            }
+            
+            async function revealScratchReward() {
+                // Generate random reward between 0.10 and 5.00
+                const reward = (Math.random() * 4.9 + 0.1).toFixed(2);
+                
+                // Show reward
+                document.getElementById('scratch-reward-amount').textContent = `You won ₹${reward}!`;
+                result.style.opacity = '1';
+                
+                try {
+                    // Add reward to database
+                    const { data, error } = await supabase
+                        .from('daily_rewards')
+                        .insert([
+                            {
+                                user_id: currentUser.id,
+                                type: 'scratch',
+                                amount: parseFloat(reward),
+                                status: 'completed'
+                            }
+                        ]);
+                        
+                    if (error) throw error;
+                    
+                    // Update user balance
+                    const newBalance = userData.balance + parseFloat(reward);
+                    const newTotal = userData.total_earned + parseFloat(reward);
+                    
+                    const { error: updateError } = await supabase
+                        .from('users')
+                        .update({ 
+                            balance: newBalance,
+                            total_earned: newTotal
+                        })
+                        .eq('id', currentUser.id);
+                        
+                    if (updateError) throw updateError;
+                    
+                    // Add transaction
+                    await supabase
+                        .from('transactions')
+                        .insert([
+                            {
+                                user_id: currentUser.id,
+                                type: 'reward',
+                                amount: parseFloat(reward),
+                                description: 'Scratch card reward'
+                            }
+                        ]);
+                    
+                    // Update local data
+                    userData.balance = newBalance;
+                    userData.total_earned = newTotal;
+                    todaysRewards.scratch = true;
+                    
+                    // Update UI
+                    updateUserUI();
+                    updateRewardsUI();
+                    
+                    showToast(`Scratch card reward! ₹${reward} added to your balance.`);
+                    
+                } catch (error) {
+                    console.error('Error processing scratch reward:', error);
+                    showToast('Error processing reward. Please try again.', true);
+                }
+            }
+        }
+        
+        // Show toast notification
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            
+            toastMessage.textContent = message;
+            
+            if (isError) {
+                toast.style.background = '#f44336';
+                toast.innerHTML = '<i class="fas fa-exclamation-circle"></i><span id="toast-message"></span>';
+                toastMessage.textContent = message;
+            } else {
+                toast.style.background = 'var(--primary-green)';
+                toast.innerHTML = '<i class="fas fa-check-circle"></i><span id="toast-message"></span>';
+                toastMessage.textContent = message;
+            }
+            
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+        
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
