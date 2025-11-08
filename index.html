@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Earnzy - Play Daily • Earn Smart • Grow Consistently</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --primary-green: #00C853;
+            --secondary-white: #FFFFFF;
+            --accent-black: linear-gradient(180deg, #000000 0%, #1B1B1B 100%);
+            --highlight-green: #7CFC00;
+            --text-dark: #222222;
+            --background-gradient: linear-gradient(180deg, #FFFFFF 0%, #E8F5E9 50%, #00C853 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: var(--background-gradient);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 480px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            font-size: 32px;
+            color: var(--primary-green);
+            margin-bottom: 20px;
+        }
+
+        .logo i {
+            font-size: 40px;
+        }
+
+        .tagline {
+            font-family: 'Poppins', sans-serif;
+            font-size: 18px;
+            margin-bottom: 40px;
+            color: var(--text-dark);
+        }
+
+        .hero-image {
+            width: 100%;
+            max-width: 300px;
+            margin: 0 auto 40px;
+        }
+
+        .hero-image img {
+            width: 100%;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+
+        .feature {
+            background: var(--secondary-white);
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .feature-icon {
+            font-size: 24px;
+            color: var(--primary-green);
+            margin-bottom: 12px;
+        }
+
+        .feature-title {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .feature-desc {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .login-btn {
+            background: var(--primary-green);
+            color: var(--secondary-white);
+            border: none;
+            border-radius: 50px;
+            padding: 16px 32px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            max-width: 300px;
+            margin: 0 auto;
+            box-shadow: 0 6px 20px rgba(0, 200, 83, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 200, 83, 0.4);
+        }
+
+        .login-btn i {
+            font-size: 24px;
+        }
+
+        .loading {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-green);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            color: #f44336;
+            margin-top: 16px;
+            padding: 12px;
+            background: rgba(244, 67, 54, 0.1);
+            border-radius: 8px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <i class="fas fa-gem"></i>
+            <span>Earnzy</span>
+        </div>
+        
+        <div class="tagline">
+            Play Daily • Earn Smart • Grow Consistently
+        </div>
+        
+        <div class="hero-image">
+            <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80" alt="Earn Money">
+        </div>
+        
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <div class="feature-title">Daily Rewards</div>
+                <div class="feature-desc">Earn daily with check-ins and tasks</div>
+            </div>
+            
+            <div class="feature">
+                <div class="feature-icon">
+                    <i class="fas fa-gift"></i>
+                </div>
+                <div class="feature-title">Scratch Cards</div>
+                <div class="feature-desc">Win up to ₹5 with scratch cards</div>
+            </div>
+            
+            <div class="feature">
+                <div class="feature-icon">
+                    <i class="fas fa-tasks"></i>
+                </div>
+                <div class="feature-title">Easy Tasks</div>
+                <div class="feature-desc">Complete simple tasks for money</div>
+            </div>
+            
+            <div class="feature">
+                <div class="feature-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="feature-title">Refer Friends</div>
+                <div class="feature-desc">Earn ₹5 for each friend you refer</div>
+            </div>
+        </div>
+        
+        <button class="login-btn" id="googleLogin">
+            <i class="fab fa-google"></i>
+            Continue with Google
+        </button>
+        
+        <div class="loading" id="loading">
+            <div class="loading-spinner"></div>
+            <p>Signing you in...</p>
+        </div>
+        
+        <div class="error-message" id="errorMessage"></div>
+    </div>
+
+    <script>
+        // Initialize Supabase
+        const SUPABASE_URL = 'https://yxzztomtgaqmboquoszg.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4enp0b210Z2FxbWJvcXVvc3pnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI0MzU4OTQsImV4cCI6MjA3ODAxMTg5NH0.NKaBpeTUE3zgcyCOl_mbF1NJHGry5I8vBDzkb1RS1DY';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // Check if user is already logged in
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session) {
+                window.location.href = 'dashboard.html';
+            }
+        });
+        
+        // Google OAuth login
+        document.getElementById('googleLogin').addEventListener('click', async () => {
+            const loading = document.getElementById('loading');
+            const errorMessage = document.getElementById('errorMessage');
+            
+            loading.style.display = 'block';
+            errorMessage.style.display = 'none';
+            
+            try {
+                const { data, error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.location.origin + '/dashboard.html'
+                    }
+                });
+                
+                if (error) throw error;
+            } catch (error) {
+                loading.style.display = 'none';
+                errorMessage.textContent = error.message;
+                errorMessage.style.display = 'block';
+                console.error('Login error:', error);
+            }
+        });
+        
+        // Listen for auth state changes
+        supabase.auth.onAuthStateChange(async (event, session) => {
+            if (event === 'SIGNED_IN' && session) {
+                // Create or update user in database
+                const { user } = session;
+                
+                try {
+                    const { data: existingUser, error: fetchError } = await supabase
+                        .from('users')
+                        .select('*')
+                        .eq('id', user.id)
+                        .single();
+                    
+                    if (fetchError && fetchError.code !== 'PGRST116') {
+                        console.error('Error fetching user:', fetchError);
+                        return;
+                    }
+                    
+                    if (!existingUser) {
+                        // Create new user
+                        const { error: insertError } = await supabase
+                            .from('users')
+                            .insert([
+                                {
+                                    id: user.id,
+                                    email: user.email,
+                                    full_name: user.user_metadata.full_name,
+                                    avatar_url: user.user_metadata.avatar_url,
+                                    balance: 5.00, // Welcome bonus
+                                    total_earned: 5.00
+                                }
+                            ]);
+                        
+                        if (insertError) {
+                            console.error('Error creating user:', insertError);
+                        } else {
+                            // Add welcome bonus transaction
+                            await supabase
+                                .from('transactions')
+                                .insert([
+                                    {
+                                        user_id: user.id,
+                                        type: 'bonus',
+                                        amount: 5.00,
+                                        description: 'Welcome bonus'
+                                    }
+                                ]);
+                        }
+                    } else {
+                        // Update last login for existing user
+                        await supabase
+                            .from('users')
+                            .update({ last_login: new Date() })
+                            .eq('id', user.id);
+                    }
+                } catch (error) {
+                    console.error('Error in auth state change:', error);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
